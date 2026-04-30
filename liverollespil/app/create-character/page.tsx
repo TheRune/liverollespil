@@ -25,13 +25,20 @@ export default function CreateCharacter() {
   }
 
   const toggleAbility = (id: string) => {
-    setSelectedAbilities(prev =>
-      prev.includes(id)
-        ? prev.filter(a => a !== id)
-        : [...prev, id]
-    )
-  }
+    setSelectedAbilities(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(a => a !== id)
+      }
 
+      if (prev.length >= 5) {
+        alert('Max 5 evner')
+        return prev
+      }
+
+      return [...prev, id]
+    })
+  }
+  
   const handleSubmit = async () => {
     const { data: userData } = await supabase.auth.getUser()
     const user = userData.user

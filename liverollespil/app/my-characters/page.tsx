@@ -17,9 +17,15 @@ export default function MyCharacters() {
     if (!user) return
 
     const { data } = await supabase
-      .from('characters')
-      .select('*, races(name)')
-      .eq('user_id', user.id)
+    .from('characters')
+    .select(`
+      *,
+      races(name),
+      character_abilities(
+        abilities(name)
+      )
+    `)
+    .eq('user_id', user.id)
 
     setCharacters(data || [])
   }
@@ -33,6 +39,11 @@ export default function MyCharacters() {
           <h2 className="font-bold">{c.character_name}</h2>
           <p>Spiller: {c.player_name}</p>
           <p>Race: {c.races?.name}</p>
+          {c.character_abilities?.map((a: any) => (
+            <span key={a.abilities.name} className="mr-2">
+              {a.abilities.name}
+            </span>
+          ))}
         </div>
       ))}
     </div>

@@ -5,12 +5,17 @@ import { supabase } from '@/lib/supabase'
 
 export default function Admin() {
   const [characters, setCharacters] = useState<any[]>([])
-
+  
   useEffect(() => {
     load()
   }, [])
+  const GM_EMAIL = 'din@email.com'
 
   const load = async () => {
+    const { data: userData } = await supabase.auth.getUser()
+    if (userData.user?.email !== GM_EMAIL) {
+      return alert('Not authorized')
+    }
     const { data } = await supabase
       .from('characters')
       .select('*, races(name)')
