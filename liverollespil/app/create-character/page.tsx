@@ -18,13 +18,19 @@ export default function CreateCharacter() {
 
   const fetchData = async () => {
     const { data: racesData } = await supabase.from('races').select('*')
-    const { data: abilitiesData } = await supabase.from('abilities').select('*')
+    const { data: abilitiesData } = await supabase
+      .from('abilities')
+      .select(`
+        *,
+        ability_requirements(required_ability_id),
+        ability_conflicts(conflicting_ability_id)
+      `)
 
     setRaces(racesData || [])
     setAbilities(abilitiesData || [])
   }
-
-  const toggleAbility = (id: string) => {
+  
+  const toggleAbility2 = (id: string) => {
     setSelectedAbilities(prev => {
       if (prev.includes(id)) {
         return prev.filter(a => a !== id)
@@ -32,6 +38,46 @@ export default function CreateCharacter() {
 
       if (prev.length >= 5) {
         alert('Max 5 evner')
+        return prev
+      }
+
+      return [...prev, id]
+    })
+  }
+  const toggleAbility = (id: string) => {
+    setSelectedAbilities(prev => {
+      const ability = abilities.find(a => a.id === id)
+
+      if (!ability) return prev
+
+      // fjern hvis allerede valgt
+      if (prev.includes(id)) {
+        return prev.filter(a => a !== id)
+      }
+
+      // max 5
+      if (prev.length >= 5) {
+        alert('Max 5 evner')
+        return prev
+      }
+
+      // tjek requirements
+      const missingReqs = ability.ability_requirements?.filter(
+        (req: any) => !prev.includes(req.required_ability_id)
+      )
+
+      if (missingReqs?.length > 0) {
+        alert('Mangler krav for denne evne')
+        return prev
+      }
+
+      // tjek conflicts
+      const hasConflict = ability.ability_conflicts?.some(
+        (conf: any) => prev.includes(conf.conflicting_ability_id)
+      )
+
+      if (hasConflict) {
+        alert('Konflikt med valgt evne')
         return prev
       }
 
@@ -104,19 +150,32 @@ export default function CreateCharacter() {
       <div>
         <h2 className="font-bold">Evner</h2>
         <div className="grid grid-cols-2 gap-2">
-          {abilities.map(a => (
-            <button
-              key={a.id}
-              onClick={() => toggleAbility(a.id)}
-              className={`border p-2 ${
-                selectedAbilities.includes(a.id)
-                  ? 'bg-black text-white'
-                  : ''
-              }`}
-            >
-              {a.name}
-            </button>
-          ))}
+          {abilities.map(a => {
+            const isSelected = selectedAbilities.includes(a.id)
+
+            const missingReqs = a.ability_requirements?.some(
+              (req: any) => !selectedAbilities.includes(req.required_ability_id)
+            )
+
+            const hasConflict = a.ability_conflicts?.some(
+              (conf: any) => selectedAbilities.includes(conf.conflicting_ability_id)
+            )
+
+            const disabled = missingReqs || hasConflict
+
+            return (
+              <button
+                key={a.id}
+                disabled={disabled}
+                onClick={() => toggleAbility(a.id)}
+                className={`border p-2 ${
+                  isSelected ? 'bg-black text-white' : ''
+                } ${disabled ? 'opacity-50' : ''}`}
+              >
+                {a.name}
+              </button>
+            )
+          })}
         </div>
       </div>
 
