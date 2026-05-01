@@ -26,6 +26,9 @@ export default function Admin() {
   return (
     <div className="p-6">
       <h1 className="text-xl font-bold">GM Dashboard</h1>
+      <a href="/admin/abilities" className="underline">
+        Administrer evner
+      </a>
 
       {characters.map(c => (
         <div key={c.id} className="border p-4 mt-2">
