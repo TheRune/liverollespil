@@ -1,7 +1,7 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
-const GM_EMAIL = 'din@email.com'
+const GM_EMAIL = process.env.ADMIN_EMAIL
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -22,7 +22,7 @@ export default function AbilityAdmin() {
         alert('Not authorized')
         return
     }
-    
+
     const { data } = await supabase
       .from('abilities')
       .select('*')

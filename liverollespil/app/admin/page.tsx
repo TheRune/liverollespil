@@ -9,7 +9,7 @@ export default function Admin() {
   useEffect(() => {
     load()
   }, [])
-  const GM_EMAIL = 'din@email.com'
+  const GM_EMAIL = process.env.ADMIN_EMAIL
 
   const load = async () => {
     const { data: userData } = await supabase.auth.getUser()
