@@ -12,6 +12,7 @@ export default function CreateCharacter() {
   const [characterName, setCharacterName] = useState('')
   const [raceId, setRaceId] = useState('')
   const [selectedAbilities, setSelectedAbilities] = useState<string[]>([])
+  const [characterLevel, setCharacterLevel] = useState(1)
 
   useEffect(() => {
     fetchData()
@@ -33,38 +34,22 @@ export default function CreateCharacter() {
   
   const toggleAbility = (id: string) => {
     setSelectedAbilities(prev => {
-      const ability = abilities.find(a => a.id === id)
+      // allerede valgt → gør ingenting (kan ikke fjernes)
+      if (prev.includes(id)) return prev
 
-      if (!ability) return prev
-
-      // fjern hvis allerede valgt
-      if (prev.includes(id)) {
-        return prev.filter(a => a !== id)
-      }
-
-      // max 5
-      if (prev.length >= 5) {
-        alert('Max 5 evner')
+      if (prev.length >= characterLevel) {
+        alert('Du har nået max antal evner')
         return prev
       }
 
-      // tjek requirements
-      const missingReqs = ability.ability_requirements?.filter(
+      const ability = abilities.find(a => a.id === id)
+
+      const missingReqs = ability.ability_requirements?.some(
         (req: any) => !prev.includes(req.required_ability_id)
       )
 
-      if (missingReqs?.length > 0) {
-        alert('Mangler krav for denne evne')
-        return prev
-      }
-
-      // tjek conflicts
-      const hasConflict = ability.ability_conflicts?.some(
-        (conf: any) => prev.includes(conf.conflicting_ability_id)
-      )
-
-      if (hasConflict) {
-        alert('Konflikt med valgt evne')
+      if (missingReqs) {
+        alert('Du mangler tidligere niveau')
         return prev
       }
 

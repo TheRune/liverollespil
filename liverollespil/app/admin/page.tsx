@@ -31,6 +31,10 @@ export default function Admin() {
         Administrer evner
       </a>
 
+      <a href="/admin/sessions" className="underline">
+        Administrer spilgange
+      </a>
+
       {characters.map(c => (
         <div key={c.id} className="border p-4 mt-2">
           <h2>{c.character_name}</h2>
