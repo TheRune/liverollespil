@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import BackButton from '@/components/BackButton'
 
 export default function MyCharacters() {
   const [characters, setCharacters] = useState<any[]>([])
@@ -32,6 +33,7 @@ export default function MyCharacters() {
 
   return (
     <div className="p-6">
+      <BackButton />
       <h1 className="text-xl font-bold">Mine karakterer</h1>
 
       {characters.map(c => (

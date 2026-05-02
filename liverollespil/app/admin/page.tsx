@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 export default function Admin() {
   const [characters, setCharacters] = useState<any[]>([])
-  
+  const router = useRouter()
+
   useEffect(() => {
     load()
   }, [])
@@ -16,6 +18,10 @@ export default function Admin() {
       .select('*, races(name)')
 
     setCharacters(data || [])
+  }
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
   }
 
   return (
@@ -32,6 +38,13 @@ export default function Admin() {
           <p>Race: {c.races?.name}</p>
         </div>
       ))}
+
+      <button
+      onClick={handleLogout}
+      className="bg-red-600 text-white px-4 py-2 mt-4"
+    >
+      Log ud
+    </button>
     </div>
   )
 }

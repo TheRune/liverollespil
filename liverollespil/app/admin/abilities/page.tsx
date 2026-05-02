@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import BackButton from '@/components/BackButton'
 
 export default function AbilityAdmin() {
   const [abilities, setAbilities] = useState<any[]>([])
@@ -51,6 +52,7 @@ export default function AbilityAdmin() {
 
   return (
     <div className="p-6 space-y-6">
+      <BackButton />
       <h1 className="text-2xl font-bold">GM – Evner</h1>
 
       {/* Opret */}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import BackButton from '@/components/BackButton'
 
 export default function CreateCharacter() {
   const [races, setRaces] = useState<any[]>([])
@@ -30,20 +31,6 @@ export default function CreateCharacter() {
     setAbilities(abilitiesData || [])
   }
   
-  const toggleAbility2 = (id: string) => {
-    setSelectedAbilities(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(a => a !== id)
-      }
-
-      if (prev.length >= 5) {
-        alert('Max 5 evner')
-        return prev
-      }
-
-      return [...prev, id]
-    })
-  }
   const toggleAbility = (id: string) => {
     setSelectedAbilities(prev => {
       const ability = abilities.find(a => a.id === id)
@@ -118,6 +105,7 @@ export default function CreateCharacter() {
 
   return (
     <div className="p-6 max-w-xl mx-auto space-y-4">
+      <BackButton />
       <h1 className="text-2xl font-bold">Create Character</h1>
 
       <input
