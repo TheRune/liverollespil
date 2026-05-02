@@ -37,7 +37,6 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
       <div className="p-6 border rounded-xl w-80 space-y-4">
         <h1 className="text-xl font-bold">Login</h1>
 
@@ -71,6 +70,6 @@ export default function LoginPage() {
 
         {message && <p className="text-sm">{message}</p>}
       </div>
-    </div>
+
   )
 }
