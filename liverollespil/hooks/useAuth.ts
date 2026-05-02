@@ -26,6 +26,7 @@ export function useAuth(requiredRole?: 'gm' | 'player') {
         .single()
 
       setRole(profile?.role || null)
+      alert('profile: '+profile?.role)
       setLoading(false)
     }
 
