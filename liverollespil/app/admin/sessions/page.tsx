@@ -5,15 +5,50 @@ import { supabase } from '@/lib/supabase'
 import BackButton from '@/components/BackButton'
 
 export default function SessionsAdmin() {
+  const [newDate, setNewDate] = useState('')
   const [characters, setCharacters] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string[]>([])
+  const [sessions, setSessions] = useState<any[]>([])
   const [activeSession, setActiveSession] = useState<any>(null)
   const [sessionCharacters, setSessionCharacters] = useState<any[]>([])
 
   useEffect(() => {
     load()
   }, [])
+
+  const createSession = async () => {
+    if (!newDate) {
+        alert('Vælg dato')
+        return
+    }
+
+    const { data } = await supabase
+        .from('game_sessions')
+        .insert({
+        played_at: newDate,
+        is_active: false
+        })
+        .select()
+        .single()
+
+    setNewDate('')
+    load()
+  }
+
+  const selectSession = async (session: any) => {
+    setActiveSession(session)
+
+    const { data } = await supabase
+        .from('game_session_characters')
+        .select(`
+            id,
+            characters(id, character_name, level)
+        `)
+        .eq('session_id', session.id)
+
+    setSessionCharacters(data || [])
+  }
 
   const load = async () => {
     // alle karakterer
@@ -43,6 +78,12 @@ export default function SessionsAdmin() {
         .eq('session_id', session.id)
 
       setSessionCharacters(sc || [])
+      const { data: sessionsData } = await supabase
+        .from('game_sessions')
+        .select('*')
+        .order('played_at', { ascending: false })
+
+        setSessions(sessionsData || [])
     }
   }
 
@@ -62,28 +103,20 @@ export default function SessionsAdmin() {
 
   // ➕ tilmeld spilgang
   const addToSession = async () => {
-    let session = activeSession
-
-    if (!session) {
-      const { data: newSession } = await supabase
-        .from('game_sessions')
-        .insert({})
-        .select()
-        .single()
-
-      session = newSession
-      setActiveSession(session)
+    if (!activeSession) {
+      alert('Vælg en spilgang først')
+      return
     }
 
     for (const id of selected) {
       await supabase.from('game_session_characters').insert({
-        session_id: session.id,
+        session_id: activeSession.id,
         character_id: id
       })
     }
 
     setSelected([])
-    load()
+    selectSession(activeSession)
   }
 
   // ❌ fjern fra session
@@ -114,8 +147,7 @@ export default function SessionsAdmin() {
     await supabase
       .from('game_sessions')
       .update({
-        is_active: false,
-        played_at: new Date().toISOString()
+        is_active: false
       })
       .eq('id', activeSession.id)
 
@@ -126,10 +158,25 @@ export default function SessionsAdmin() {
 
   return (
     <div className="p-6 grid grid-cols-2 gap-6">
-      <BackButton />
-
       {/* VENSTRE: alle karakterer */}
       <div>
+        <BackButton />
+        <div className="mb-4">
+          <h3 className="font-bold">Spilgange</h3>
+
+          {sessions.map(s => (
+            <div
+              key={s.id}
+              className={`border p-2 mb-1 cursor-pointer ${
+                activeSession?.id === s.id ? 'bg-gray-200' : ''
+              }`}
+              onClick={() => selectSession(s)}
+            >
+              {s.played_at || 'Ingen dato'}
+              {s.is_active && ' (aktiv)'}
+            </div>
+          ))}
+        </div>
         <h2 className="text-xl font-bold mb-2">Karakterer</h2>
 
         <input
@@ -164,7 +211,23 @@ export default function SessionsAdmin() {
       {/* HØJRE: aktiv spilgang */}
       <div>
         <h2 className="text-xl font-bold mb-2">Spilgang</h2>
+            <div className="mb-6 border p-4">
+            <h2 className="font-bold mb-2">Opret spilgang</h2>
 
+            <input
+                type="date"
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+                className="border p-2 mr-2"
+            />
+
+            <button
+                onClick={createSession}
+                className="bg-blue-600 text-white px-4 py-2"
+            >
+                Opret spilgang
+            </button>
+        </div>
         {!activeSession && <p>Ingen aktiv spilgang</p>}
 
         {sessionCharacters.map(sc => (
