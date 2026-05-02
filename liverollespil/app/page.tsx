@@ -20,6 +20,11 @@ export default function Home() {
 
   if (!user) return <div className="p-6">Loading...</div>
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
   return (
     <div className="p-6 space-y-4">
       <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -37,7 +42,7 @@ export default function Home() {
       </a>
 
       <button
-        onClick={() => supabase.auth.signOut()}
+        onClick={handleLogout}
         className="mt-4 bg-black text-white px-4 py-2"
       >
         Logout
