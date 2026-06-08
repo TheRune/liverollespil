@@ -16,16 +16,21 @@ export default function AbilityEditPage() {
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
+  
   const [ability, setAbility] = useState<Ability | null>(null)
+  const [allAbilities, setAllAbilities] = useState<Ability[]>([])
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [description, setDescription] = useState('')
+  const [requirements, setRequirements] = useState<string[]>([])
+  const [conflicts, setConflicts] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (id) {
       loadAbility()
+      loadAllAbilities()
     }
   }, [id])
 
@@ -47,24 +52,86 @@ export default function AbilityEditPage() {
       setType(data.type || '')
       setDescription(data.description || '')
     }
+
+    // Load requirements and conflicts
+    const { data: reqs } = await supabase
+      .from('ability_requirements')
+      .select('required_ability_id')
+      .eq('ability_id', id)
+
+    const { data: confs } = await supabase
+      .from('ability_conflicts')
+      .select('conflicting_ability_id')
+      .eq('ability_id', id)
+
+    setRequirements(reqs?.map(r => r.required_ability_id) || [])
+    setConflicts(confs?.map(c => c.conflicting_ability_id) || [])
+  }
+
+  const loadAllAbilities = async () => {
+    const { data } = await supabase
+      .from('abilities')
+      .select('*')
+      .order('name')
+
+    setAllAbilities(data || [])
+  }
+
+  const toggleRequirement = (abilityId: string) => {
+    setRequirements(prev =>
+      prev.includes(abilityId)
+        ? prev.filter(id => id !== abilityId)
+        : [...prev, abilityId]
+    )
+  }
+
+  const toggleConflict = (abilityId: string) => {
+    setConflicts(prev =>
+      prev.includes(abilityId)
+        ? prev.filter(id => id !== abilityId)
+        : [...prev, abilityId]
+    )
   }
 
   const saveAbility = async () => {
     setSaving(true)
     setError('')
 
+    // Update ability data
     const { error: updateError } = await supabase
       .from('abilities')
       .update({ name, type, description })
       .eq('id', id)
 
-    setSaving(false)
-
     if (updateError) {
+      setSaving(false)
       setError(updateError.message)
       return
     }
 
+    // Delete existing requirements and conflicts
+    await supabase.from('ability_requirements').delete().eq('ability_id', id)
+    await supabase.from('ability_conflicts').delete().eq('ability_id', id)
+
+    // Insert new requirements
+    if (requirements.length > 0) {
+      const reqs = requirements.map(req_id => ({
+        ability_id: id,
+        required_ability_id: req_id
+      }))
+      await supabase.from('ability_requirements').insert(reqs)
+    }
+
+    // Insert new conflicts
+    if (conflicts.length > 0) {
+      const confs = conflicts.map(conf_id => ({
+        ability_id: id,
+        conflicting_ability_id: conf_id
+      }))
+      await supabase.from('ability_conflicts').insert(confs)
+    }
+
+    setSaving(false)
     router.push('/admin/abilities')
   }
 
@@ -89,6 +156,8 @@ export default function AbilityEditPage() {
       </div>
     )
   }
+
+  const otherAbilities = allAbilities.filter(a => a.id !== id)
 
   return (
     <div className="p-6 space-y-6">
@@ -139,7 +208,49 @@ export default function AbilityEditPage() {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="border-t pt-4">
+          <h3 className="font-medium mb-3">Krav (evner denne skal kræve)</h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto border p-2">
+            {otherAbilities.length === 0 ? (
+              <p className="text-gray-500 text-sm">Ingen andre evner tilgængelige</p>
+            ) : (
+              otherAbilities.map(ability => (
+                <label key={ability.id} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requirements.includes(ability.id)}
+                    onChange={() => toggleRequirement(ability.id)}
+                    className="w-4 h-4"
+                  />
+                  <span>{ability.name}</span>
+                </label>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <h3 className="font-medium mb-3">Konflikter (evner denne ikke kan kombineres med)</h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto border p-2">
+            {otherAbilities.length === 0 ? (
+              <p className="text-gray-500 text-sm">Ingen andre evner tilgængelige</p>
+            ) : (
+              otherAbilities.map(ability => (
+                <label key={ability.id} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={conflicts.includes(ability.id)}
+                    onChange={() => toggleConflict(ability.id)}
+                    className="w-4 h-4"
+                  />
+                  <span>{ability.name}</span>
+                </label>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t">
           <button
             onClick={saveAbility}
             disabled={saving}
@@ -155,3 +266,4 @@ export default function AbilityEditPage() {
     </div>
   )
 }
+
