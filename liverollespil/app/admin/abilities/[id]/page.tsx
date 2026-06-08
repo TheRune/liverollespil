@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -12,14 +12,10 @@ interface Ability {
   description: string
 }
 
-interface PageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function AbilityEditPage({ params }: PageProps) {
+export default function AbilityEditPage() {
   const router = useRouter()
+  const params = useParams()
+  const id = params.id as string
   const [ability, setAbility] = useState<Ability | null>(null)
   const [name, setName] = useState('')
   const [type, setType] = useState('')
@@ -28,14 +24,16 @@ export default function AbilityEditPage({ params }: PageProps) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    loadAbility()
-  }, [params.id])
+    if (id) {
+      loadAbility()
+    }
+  }, [id])
 
   const loadAbility = async () => {
     const { data, error: fetchError } = await supabase
       .from('abilities')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError) {
@@ -58,7 +56,7 @@ export default function AbilityEditPage({ params }: PageProps) {
     const { error: updateError } = await supabase
       .from('abilities')
       .update({ name, type, description })
-      .eq('id', params.id)
+      .eq('id', id)
 
     setSaving(false)
 
