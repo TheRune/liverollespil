@@ -6,8 +6,18 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import BackButton from '@/components/BackButton'
 
+interface AbilityWithRelations {
+  id: string
+  name: string
+  type: string
+  description: string
+  requirements: string[]
+  conflicts: string[]
+}
+
 export default function AbilityAdmin() {
-  const [abilities, setAbilities] = useState<any[]>([])
+  const [abilities, setAbilities] = useState<AbilityWithRelations[]>([])
+  const [abilityMap, setAbilityMap] = useState<Record<string, string>>({})
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [description, setDescription] = useState('')
@@ -17,11 +27,46 @@ export default function AbilityAdmin() {
   }, [])
 
   const load = async () => {
-    const { data } = await supabase
+    // Load all abilities
+    const { data: abilitiesData } = await supabase
       .from('abilities')
       .select('*')
       .order('name')
-    setAbilities(data || [])
+
+    if (!abilitiesData) {
+      setAbilities([])
+      return
+    }
+
+    // Create a map of ability ID to name for quick lookup
+    const map: Record<string, string> = {}
+    abilitiesData.forEach(a => {
+      map[a.id] = a.name
+    })
+    setAbilityMap(map)
+
+    // Load relationships for each ability
+    const abilitiesWithRelations = await Promise.all(
+      abilitiesData.map(async (ability) => {
+        const { data: reqs } = await supabase
+          .from('ability_requirements')
+          .select('required_ability_id')
+          .eq('ability_id', ability.id)
+
+        const { data: confs } = await supabase
+          .from('ability_conflicts')
+          .select('conflicting_ability_id')
+          .eq('ability_id', ability.id)
+
+        return {
+          ...ability,
+          requirements: reqs?.map(r => r.required_ability_id) || [],
+          conflicts: confs?.map(c => c.conflicting_ability_id) || []
+        }
+      })
+    )
+
+    setAbilities(abilitiesWithRelations)
   }
 
   const createAbility = async () => {
@@ -35,20 +80,6 @@ export default function AbilityAdmin() {
     setType('')
     setDescription('')
     load()
-  }
-
-  const addRequirement = async (abilityId: string, requiredId: string) => {
-    await supabase.from('ability_requirements').insert({
-        ability_id: abilityId,
-        required_ability_id: requiredId
-    })
-  }
-
-  const addConflict = async (abilityId: string, conflictId: string) => {
-    await supabase.from('ability_conflicts').insert({
-        ability_id: abilityId,
-        conflicting_ability_id: conflictId
-    })
   }
 
   return (
@@ -107,24 +138,28 @@ export default function AbilityAdmin() {
               <p className="text-sm text-gray-500">{a.type}</p>
             </div>
             <p className="text-sm">{a.description}</p>
-            <div className="flex gap-2 flex-wrap">
-              <select onChange={(e) => addRequirement(a.id, e.target.value)} className="border p-1 mt-2">
-                <option value="">Tilføj krav</option>
-                {abilities.map(other => (
-                  <option key={other.id} value={other.id}>
-                    {other.name}
-                  </option>
-                ))}
-              </select>
-              <select onChange={(e) => addConflict(a.id, e.target.value)} className="border p-1 mt-2">
-                <option value="">Tilføj konflikt</option>
-                {abilities.map(other => (
-                  <option key={other.id} value={other.id}>
-                    {other.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            
+            {a.requirements.length > 0 && (
+              <div className="mt-2 pt-2 border-t">
+                <p className="text-sm font-medium text-gray-700">Krav:</p>
+                <ul className="text-sm list-disc list-inside text-gray-600">
+                  {a.requirements.map(reqId => (
+                    <li key={reqId}>{abilityMap[reqId] || 'Ukendt evne'}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {a.conflicts.length > 0 && (
+              <div className="mt-2 pt-2 border-t">
+                <p className="text-sm font-medium text-gray-700">Konflikter:</p>
+                <ul className="text-sm list-disc list-inside text-gray-600">
+                  {a.conflicts.map(confId => (
+                    <li key={confId}>{abilityMap[confId] || 'Ukendt evne'}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ))}
       </div>
