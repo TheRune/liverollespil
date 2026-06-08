@@ -1,6 +1,7 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import BackButton from '@/components/BackButton'
@@ -93,26 +94,37 @@ export default function AbilityAdmin() {
         <h2 className="font-bold">Alle evner</h2>
 
         {abilities.map(a => (
-          <div key={a.id} className="border p-3 mt-2">
-            <strong>{a.name}</strong>
-            <p>{a.type}</p>
+          <div key={a.id} className="relative border p-3 mt-2 space-y-2">
+            <Link
+              href={`/admin/abilities/${a.id}`}
+              className="absolute right-3 top-3 text-sm text-blue-600 hover:text-blue-800"
+              aria-label={`Rediger ${a.name}`}
+            >
+              ✏️
+            </Link>
+            <div>
+              <div className="text-lg font-semibold">{a.name}</div>
+              <p className="text-sm text-gray-500">{a.type}</p>
+            </div>
             <p className="text-sm">{a.description}</p>
-            <select onChange={(e) => addRequirement(a.id, e.target.value)} className="border p-1 mt-2">
+            <div className="flex gap-2 flex-wrap">
+              <select onChange={(e) => addRequirement(a.id, e.target.value)} className="border p-1 mt-2">
                 <option value="">Tilføj krav</option>
                 {abilities.map(other => (
-                    <option key={other.id} value={other.id}>
+                  <option key={other.id} value={other.id}>
                     {other.name}
-                    </option>
+                  </option>
                 ))}
-            </select>
-            <select onChange={(e) => addConflict(a.id, e.target.value)} className="border p-1 mt-2">
+              </select>
+              <select onChange={(e) => addConflict(a.id, e.target.value)} className="border p-1 mt-2">
                 <option value="">Tilføj konflikt</option>
                 {abilities.map(other => (
-                    <option key={other.id} value={other.id}>
+                  <option key={other.id} value={other.id}>
                     {other.name}
-                    </option>
+                  </option>
                 ))}
-            </select>
+              </select>
+            </div>
           </div>
         ))}
       </div>
