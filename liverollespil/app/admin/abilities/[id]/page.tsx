@@ -4,12 +4,14 @@ import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import EmojiPicker from '../../../../components/EmojiPicker'
 
 interface Ability {
   id: string
   name: string
   type: string
   description: string
+  icon?: string
 }
 
 export default function AbilityEditPage() {
@@ -22,6 +24,8 @@ export default function AbilityEditPage() {
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [description, setDescription] = useState('')
+  const [icon, setIcon] = useState('')
+  const [isEmojiPickerOpen, setEmojiPickerOpen] = useState(false)
   const [requirements, setRequirements] = useState<string[]>([])
   const [conflicts, setConflicts] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
@@ -51,6 +55,7 @@ export default function AbilityEditPage() {
       setName(data.name || '')
       setType(data.type || '')
       setDescription(data.description || '')
+      setIcon(data.icon || '')
     }
 
     // Load requirements and conflicts
@@ -100,7 +105,7 @@ export default function AbilityEditPage() {
     // Update ability data
     const { error: updateError } = await supabase
       .from('abilities')
-      .update({ name, type, description })
+      .update({ name, type, description, icon })
       .eq('id', id)
 
     if (updateError) {
@@ -193,6 +198,36 @@ export default function AbilityEditPage() {
         </div>
 
         <div>
+          <label className="block font-medium mb-1" htmlFor="ability-icon">
+            Ikon
+          </label>
+          <div className="space-y-2">
+            <input
+              id="ability-icon"
+              className="border p-2 w-full"
+              value={icon}
+              onChange={(event) => setIcon(event.target.value)}
+              placeholder="Vælg eller skriv emoji (f.eks. ⚔️, 🛡️, ✨)"
+              maxLength={5}
+            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setEmojiPickerOpen(true)}
+                className="border px-3 py-2 rounded text-sm"
+              >
+                Vælg emoji
+              </button>
+              {icon ? (
+                <span className="text-2xl">{icon}</span>
+              ) : (
+                <span className="text-sm text-gray-500">Ingen emoji valgt</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
           <label className="block font-medium mb-1" htmlFor="ability-description">
             Beskrivelse
           </label>
@@ -249,6 +284,15 @@ export default function AbilityEditPage() {
             )}
           </div>
         </div>
+
+        <EmojiPicker
+          isOpen={isEmojiPickerOpen}
+          onSelect={(emoji) => {
+            setIcon(emoji)
+            setEmojiPickerOpen(false)
+          }}
+          onClose={() => setEmojiPickerOpen(false)}
+        />
 
         <div className="flex gap-3 pt-4 border-t">
           <button

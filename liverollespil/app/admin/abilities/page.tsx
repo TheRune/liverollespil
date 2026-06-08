@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import BackButton from '@/components/BackButton'
+import EmojiPicker from '../../../components/EmojiPicker'
 
 interface AbilityWithRelations {
   id: string
   name: string
   type: string
   description: string
+  icon?: string
   requirements: string[]
   conflicts: string[]
 }
@@ -21,6 +23,8 @@ export default function AbilityAdmin() {
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [description, setDescription] = useState('')
+  const [icon, setIcon] = useState('')
+  const [isEmojiPickerOpen, setEmojiPickerOpen] = useState(false)
 
   useEffect(() => {
     load()
@@ -73,12 +77,14 @@ export default function AbilityAdmin() {
     await supabase.from('abilities').insert({
       name,
       type,
-      description
+      description,
+      icon
     })
 
     setName('')
     setType('')
     setDescription('')
+    setIcon('')
     load()
   }
 
@@ -112,6 +118,30 @@ export default function AbilityAdmin() {
           onChange={e => setDescription(e.target.value)}
         />
 
+        <div className="space-y-2">
+          <input
+            className="border p-2 w-full"
+            placeholder="Vælg eller skriv emoji (fx ⚔️)"
+            value={icon}
+            onChange={e => setIcon(e.target.value)}
+            maxLength={5}
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setEmojiPickerOpen(true)}
+              className="border px-3 py-2 rounded text-sm"
+            >
+              Vælg emoji
+            </button>
+            {icon ? (
+              <span className="text-2xl">{icon}</span>
+            ) : (
+              <span className="text-sm text-gray-500">Ingen emoji valgt</span>
+            )}
+          </div>
+        </div>
+
         <button
           onClick={createAbility}
           className="bg-green-600 text-white px-4 py-2"
@@ -119,6 +149,15 @@ export default function AbilityAdmin() {
           Opret
         </button>
       </div>
+
+      <EmojiPicker
+        isOpen={isEmojiPickerOpen}
+        onSelect={(emoji) => {
+          setIcon(emoji)
+          setEmojiPickerOpen(false)
+        }}
+        onClose={() => setEmojiPickerOpen(false)}
+      />
 
       {/* Liste */}
       <div>
@@ -134,7 +173,10 @@ export default function AbilityAdmin() {
               ✏️
             </Link>
             <div>
-              <div className="text-lg font-semibold">{a.name}</div>
+              <div className="text-lg font-semibold flex items-center gap-2">
+                {a.icon && <span className="text-2xl">{a.icon}</span>}
+                {a.name}
+              </div>
               <p className="text-sm text-gray-500">{a.type}</p>
             </div>
             <p className="text-sm">{a.description}</p>
