@@ -31,6 +31,10 @@ export default function Admin() {
         Administrer evner
       </a>
 
+      <a href="/admin/races" className="button mt-4 bg-gray-200 px-4 py-2 rounded block w-max">
+        Administrer races
+      </a>
+
       <a href="/admin/sessions" className="button mt-4 bg-gray-200 px-4 py-2 rounded block w-max">
         Administrer spilgange
       </a>
