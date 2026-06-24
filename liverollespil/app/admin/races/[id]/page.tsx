@@ -76,7 +76,7 @@ export default function RaceEditPage() {
     return (
       <div className="p-6">
         <BackButton />
-        <p>Indlæser race…</p>
+        <p>Indlæser racer…</p>
       </div>
     )
   }

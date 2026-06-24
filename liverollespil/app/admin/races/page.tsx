@@ -57,7 +57,7 @@ export default function RaceAdmin() {
   return (
     <div className="p-6 space-y-6">
       <BackButton />
-      <h1 className="text-2xl font-bold">GM – Races</h1>
+      <h1 className="text-2xl font-bold">GM – Racer</h1>
 
       <div className="border p-4 space-y-3">
         <h2 className="font-bold">Opret race</h2>
@@ -86,10 +86,10 @@ export default function RaceAdmin() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Alle races</h2>
+        <h2 className="text-xl font-bold">Alle racer</h2>
 
         {races.length === 0 ? (
-          <p className="text-gray-500">Ingen races er oprettet endnu.</p>
+          <p className="text-gray-500">Ingen racer er oprettet endnu.</p>
         ) : (
           races.map(race => (
             <div key={race.id} className="border p-4 rounded space-y-2">
