@@ -1,0 +1,25 @@
+### 1) Start the backend locally
+# Set env vars in terminal or use .env.local from .env.example.
+
+# 2) Register a new user
+POST http://localhost:5032/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "tester@example.com",
+  "password": "StrongPassword123!"
+}
+
+### 3) Login with the user and copy the token
+POST http://localhost:5032/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "tester@example.com",
+  "password": "StrongPassword123!"
+}
+
+### 4) Call a protected endpoint with the returned JWT
+GET http://localhost:5032/api/auth/me
+Accept: application/json
+Authorization: Bearer {{jwt_token}}
